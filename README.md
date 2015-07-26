@@ -8,7 +8,7 @@ Content to include:
 * Marketplace link
 * A reference to the version of xenia tested on
 * A short description of how the game runs or any issues
-* A log file (run xenia with "xenia default.xex > output.log" and upload output.log to [gists.github.com](gists.github.com))
+* A log file (run xenia with "xenia default.xex > output.log" and upload output.log to [gist.github.com](https://gist.github.com/))
 * If you can: Checklist or standard list of issues
 * If you don't have the ability to add labels to your issue, please comment which labels should be added. (gotta love the github contributor system)
 
