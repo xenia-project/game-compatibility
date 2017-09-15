@@ -24,7 +24,7 @@ Tested on (xenia commit link)
 (state of the game)
 
 # Log:
-[Log file](https://gist.github.com/...)
+Compress your logfile into a compressed folder named xenia.zip and then click and drag it here (replacing this text).
 
 # Screenshot(s):
 ![](Screenshot URL)
