@@ -1,3 +1,5 @@
+<!--ISSUES NOT UTILIZING THE TEMPLATE BELOW WILL BE CLOSED!-->
+
 <!--
 Make the title of the issue:
 
@@ -14,11 +16,11 @@ Try Google: "game title" site:marketplace.xbox.com
 [Marketplace](http://marketplace.xbox.com/...)
 
 <!--
-Replace (xenia commit id) with a link to the commit the build you tested with is based from.
+Replace (Xenia commit id) with a link to the commit the build you tested with is based from.
 In AppVeyor, you can find the link under the commit message.
-ie: Tested on https://github.com/benvanik/xenia/commit/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ie: Tested on https://github.com/xenia-project/xenia/commit/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 -->
-Tested on (xenia commit link)
+Tested on (Xenia commit link)
 
 # Issues:
 (state of the game)
