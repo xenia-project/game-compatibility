@@ -1,5 +1,5 @@
 # game-compatibility
-If your favorite game isn't working on Xenia, the best way to prioritize is to find it
+If your favorite game isn't working on Xenia, the best way to prioritize it is to find it
 in the game compatibility list and give the OP a **thumbs up reaction**. This allows
 the developers to find popular games quickly.
 
