@@ -8,3 +8,6 @@ If you've looked in the list and couldn't find your game - see the following sec
 ## Submitting Issues
 If you would like to submit a game-compatibility issue, please follow the Game
 Compatibility Report template, or else your issue will be closed.
+**Don't create an issue without filling in the template.**
+
+**Empty issues are useless, and spam. Repeat offenders will be *banned*.**
