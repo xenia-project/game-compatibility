@@ -9,12 +9,15 @@ If you've looked in the list and couldn't find your game - see the following sec
 If you would like to submit a game-compatibility issue, please fill in the Game
 Compatibility Report template, or else your issue will be closed.
 
+When testing games Please use the latest [master](https://ci.appveyor.com/api/projects/benvanik/xenia/artifacts/xenia-master.zip?branch=master&job=Configuration:%20Release&pr=false) build. Unofficial and Pull Request builds will not be accepted.
+
 ### What NOT to post:
   * Empty issues (issues that don't edit the template whatsoever)
   * Non-English comments *except for posting untranslated comment alongside translated comment*
   * Comments with bad spelling/grammar:
     * [Vulkan is a graphics API](https://www.khronos.org/vulkan/). *Vulcan* is a species from Star Trek. *Vulcun* is related to eSports. *Vulkin* is an Undertale character. **Learn the difference.**
   * Non-game-specific xenia issue(s)
+  * Title tested against Unofficial and Pull Request builds.
   * Tech Support:
     * `How do I do X with xenia?`
     * `How do I fix X with xenia?`
