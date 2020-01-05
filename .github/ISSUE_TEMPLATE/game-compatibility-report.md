@@ -27,9 +27,9 @@ ie: https://marketplace.xbox.com/en-us/Product/Halo-3/66acd000-77fe-1000-9115-d8
 Replace (xxxxxxxx) with the commit id of the build you tested the game with.
 You can find the commit id in the first line of the log:
 Build: detached / xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx on (date)
-ie: Tested on https://github.com/xenia-project/xenia/commit/f748e5af49062fd78d098acdaf045183f29faf36
+ie: Tested on https://github.com/xenia-canary/xenia-canary/commit/f748e5af49062fd78d098acdaf045183f29faf36
 -->
-Tested on https://github.com/xenia-project/xenia/commit/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Tested on https://github.com/xenia-canary/xenia-canary/commit/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # Issues:
 (state of the game)
@@ -42,4 +42,4 @@ Compress your logfile into a compressed folder named xenia.zip and then click an
 
 # Labels:
 (recommended labels)
-<!-- A list of current labels can be found here: https://github.com/xenia-project/game-compatibility/labels -->
+<!-- A list of current labels can be found here: https://github.com/xenia-canary/game-compatibility/labels -->
