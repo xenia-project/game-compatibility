@@ -17,6 +17,7 @@ Compatibility Report template, or else your issue will be closed.
     * [Vulkan is a graphics API](https://www.khronos.org/vulkan/). *Vulcan* is a species from Star Trek. *Vulcun* is related to eSports. *Vulkin* is an Undertale character. **Learn the difference.**
   * Non-game-specific Xenia issue(s).
   * Results not from [master](https://ci.appveyor.com/api/projects/benvanik/xenia/artifacts/xenia-master.zip?branch=master&job=Configuration:%20Release&pr=false).
+    * Results from Xenia Canary belong in its own [compatibility tracker](https://github.com/xenia-canary/game-compatibility/issues).
   * Tech Support:
     * `How do I do/fix X?`
     * `How do I get games?`
