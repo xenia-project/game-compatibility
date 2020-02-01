@@ -27,6 +27,7 @@ ie: https://marketplace.xbox.com/en-us/Product/Halo-3/66acd000-77fe-1000-9115-d8
 Replace (xxxxxxxx) with the commit id of the build you tested the game with.
 You can find the commit id in the first line of the log:
 Build: detached / xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx on (date)
+Or simply press F2 and copy the commit URL (Help -> Build Commit on GitHub...)
 ie: Tested on https://github.com/xenia-canary/xenia-canary/commit/f748e5af49062fd78d098acdaf045183f29faf36
 -->
 Tested on https://github.com/xenia-canary/xenia-canary/commit/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
