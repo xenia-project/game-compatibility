@@ -11,7 +11,6 @@ Compatibility Report template, or else your issue will be closed.
 
 ### What NOT to post:
   * Issues that are empty, or don't edit/use the template whatsoever.
-    * To avoid creating empty issues, click `Get started`, not `Open a blank issue.`
   * Non-English comments *except for posting untranslated comment alongside translated comment*.
   * Comments with bad spelling/grammar:
     * [Vulkan is a graphics API](https://www.khronos.org/vulkan/). *Vulcan* is a species from Star Trek. *Vulcun* is related to eSports. *Vulkin* is an Undertale character. **Learn the difference.**
