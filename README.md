@@ -32,4 +32,4 @@ Comments that fall under this may be deleted.
 #### **Repeat offenders will be blocked from this repository.**
 
 #
-If you would like help with Xenia go to our [Discord server's #help channel](https://discord.gg/5g93S8H).
+If you would like help with Xenia go to our [Discord server's #help channel](https://discord.gg/Q9mxZf9).
