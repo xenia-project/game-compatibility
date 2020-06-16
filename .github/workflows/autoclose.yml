@@ -12,7 +12,8 @@ jobs:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         issue-close-message: "@${issue.user.login} your issue was automatically closed because it didn't follow the [issue template](https://raw.githubusercontent.com/xenia-project/game-compatibility/master/.github/ISSUE_TEMPLATE/game-compatibility-report.md).\n\nPlease read the [Issue/Report Guidelines](https://github.com/xenia-project/game-compatibility#reportissue-guidelines)."
         issue-pattern: "^((?![0-9a-fA-F]{8} - .*).)*$"
-    - uses: Naturalclar/issue-action@v1.0.0
+    - name: Add label
+      uses: Naturalclar/issue-action@v1.0.0
       with:
         keywords: '["https://github.com/xenia-project/xenia/commit/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"]'
         github-token: "${{ secrets.GITHUB_TOKEN }}"
