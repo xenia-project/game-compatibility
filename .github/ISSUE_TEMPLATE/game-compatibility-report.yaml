@@ -1,0 +1,83 @@
+name: Game compatibility report
+description: Template for game compatibility reports.
+title: TITLE ID - NAME (ie 4D5307E6 - Halo 3)
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **If you want help with Xenia go to our Discord server's #help channel: https://discord.gg/Q9mxZf9**
+
+        Issues specific to Xenia itself belong here: https://github.com/xenia-project/xenia
+
+        Compatibility reports for Xenia Canary belong here: https://github.com/xenia-canary/game-compatibility
+        #
+        The Title ID of a game can be found in xenia.log after running the game;
+        Search (<kbd>Ctrl+F</kbd> in most text editors) for `XEX_HEADER_EXECUTION_INFO`.
+
+        If the game doesn't have an English title you may add a translation along with the original title.
+
+        Please note original Xbox games are not supported; see [FAQ](https://github.com/xenia-project/xenia/wiki/FAQ#Can_Xenia_run_original_Xbox_games).
+  - type: checkboxes
+    id: validation
+    attributes:
+      label: Validation
+      options:
+      - label: I've read the [FAQ](https://github.com/xenia-project/xenia/wiki/FAQ).
+        required: true
+      - label: The Xenia build used is from the master branch. (not MLBS/AlexVS/Canary/pull requests, etc)
+        required: true
+      - label: This issue isn't for tech support. (help with Xenia)
+        required: true
+      - label: I've checked if this game doesn't already have a compatibility report.
+        required: true
+  - type: input
+    id: marketplace-link
+    attributes:
+      label: Xbox 360 Marketplace link
+      description: |
+        ie: https://marketplace.xbox.com/en-us/Product/Halo-3/66acd000-77fe-1000-9115-d8024d5307e6
+        Can't find it? Try Google: `"game title" site:marketplace.xbox.com`
+        Delisted, unlisted, or unreleased can only be specified if they apply, and don't have a URL at all.
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Xenia version
+      description: Xenia commit hash. You can get this pressing F2 in Xenia. Replace `...` with commit hash ie `509a1fa3866be4fb3ab9d413f600012688c89a7c`
+      placeholder: https://github.com/xenia-project/xenia/commit/.../
+      value: https://github.com/xenia-project/xenia/commit/.../
+    validations:
+      required: true
+  - type: textarea
+    id: state
+    attributes:
+      label: Issues
+      description: State of the game.
+      placeholder: Crashes on startup.
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: 'Put xenia.log into a zip and drag it here. It will be either in the same directory as the game, or the config: https://github.com/xenia-project/xenia/wiki/Options#how-to-use'
+      placeholder: '![xenia.log.zip](url)'
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: 'Drag screenshots in here. How to take screenshots on Windows: https://support.microsoft.com/en-us/windows/use-snipping-tool-to-capture-screenshots-00246869-1843-655f-f220-97299b865f6b'
+      placeholder: '![Screenshot](url)'
+    validations:
+      required: true
+  - type: input
+    id: labels
+    attributes:
+      label: Labels
+      description: See https://github.com/xenia-project/game-compatibility/labels
+      placeholder: state-intro, gpu-corrupt-drawing
+    validations:
+      required: true
