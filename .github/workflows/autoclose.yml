@@ -1,24 +1,24 @@
 name: Autoclose
 on:
   issues:
-    types: [opened]
+    types: opened
 jobs:
   autoclose:
     runs-on: ubuntu-latest
     steps:
-    - name: Autoclose issues that do not follow issue template in title
-      uses: IndyV/IssueChecker@v1.0
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        issue-close-message: "@${issue.user.login} your issue was automatically closed because it didn't follow the [issue template](https://raw.githubusercontent.com/xenia-project/game-compatibility/master/.github/ISSUE_TEMPLATE/game-compatibility-report.md).\n\nPlease read the [Issue/Report Guidelines](https://github.com/xenia-project/game-compatibility#reportissue-guidelines)."
-        issue-pattern: "^((?![0-9a-fA-F]{8} - .*).)*$"
-    - name: Add label
-      uses: Naturalclar/issue-action@v1.0.0
-      with:
-        keywords: '["https://github.com/xenia-project/xenia/commit/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"]'
-        github-token: "${{ secrets.GITHUB_TOKEN }}"
-        labels: '["issue-invalid"]'
-    - uses: bdougie/close-issues-based-on-label@v1.1
-      env:
-        LABEL: issue-invalid
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Autoclose issues that do not follow issue template in title
+        uses: IndyV/IssueChecker@v1.0
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-close-message: "@${issue.user.login} your issue was automatically closed because it didn't follow the [issue template](https://raw.githubusercontent.com/xenia-project/game-compatibility/master/.github/ISSUE_TEMPLATE/game-compatibility-report.md).\n\nPlease read the [Issue/Report Guidelines](https://github.com/xenia-project/game-compatibility#reportissue-guidelines)."
+          issue-pattern: "^((?![0-9a-fA-F]{8} - .*).)*$"
+      - name: Add label
+        uses: Naturalclar/issue-action@v1.0.0 # TODO: Update to v2.0.2
+        with:
+          keywords: '["https://github.com/xenia-project/xenia/commit/.../"]'
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          labels: '["issue-invalid"]'
+      - uses: bdougie/close-issues-based-on-label@v1.1 # v1.2 is broken
+        env:
+          LABEL: issue-invalid
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
