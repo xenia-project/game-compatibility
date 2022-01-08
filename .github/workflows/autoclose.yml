@@ -1,24 +1,105 @@
 name: Autoclose
 on:
   issues:
-    types: opened
+    types: opened # TODO: Check for edits(?)
 jobs:
   autoclose:
     runs-on: ubuntu-latest
     steps:
-      - name: Autoclose issues that do not follow issue template in title
-        uses: IndyV/IssueChecker@v1.0
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          issue-close-message: "@${issue.user.login} your issue was automatically closed because it didn't follow the [issue template](https://raw.githubusercontent.com/xenia-project/game-compatibility/master/.github/ISSUE_TEMPLATE/game-compatibility-report.md).\n\nPlease read the [Issue/Report Guidelines](https://github.com/xenia-project/game-compatibility#reportissue-guidelines)."
-          issue-pattern: "^((?![0-9a-fA-F]{8} - .*).)*$"
-      - name: Add label
-        uses: Naturalclar/issue-action@v1.0.0 # TODO: Update to v2.0.2
-        with:
-          keywords: '["https://github.com/xenia-project/xenia/commit/.../"]'
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          labels: '["issue-invalid"]'
-      - uses: bdougie/close-issues-based-on-label@v1.1 # v1.2 is broken
+      - uses: actions/checkout@v2 # Needed by gh
+      - name: Autoclose
         env:
-          LABEL: issue-invalid
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          issue_number: ${{ github.event.issue.number }}
+          issue_author: ${{ github.event.issue.user.login }}
+          issue_title: ${{ github.event.issue.title }}
+          issue_body: ${{ github.event.issue.body }}
+        run: |
+          issue_body_lowercase=${issue_body,,} # This lets regex be case-insensitive
+          close_body="@$issue_author your issue was automatically closed because it didn't follow the [issue/report guidelines](https://github.com/xenia-project/game-compatibility#reportissue-guidelines)."
+          close_body+=$'\n'"Here is what's wrong with your issue:"
+
+          function issue_invalidate()
+          {
+            echo "$1"
+            close_body+=$'\n'"  * $1"
+            if [[ -z "$issue_invalid" ]]; then
+              issue_invalid="true"
+            fi
+          }
+
+          # Check issue title
+          ## TODO: Check for duplicate(?)
+          if [[ "$issue_title" =~ ^([0-9a-fA-F]{8} - .*)*$ ]]; then
+            echo "Title is valid."
+          else
+            issue_invalidate "Title is invalid."
+          fi
+
+          # Check marketplace link
+          if [[ "$issue_body_lowercase" =~ https://marketplace.xbox.com/|delisted|unlisted|unreleased ]]; then
+            echo "Marketplace link exists."
+          else
+            issue_invalidate "Marketplace link is invalid or missing."
+          fi
+
+          # Check version
+          ## TODO: Properly check for commit hash
+          if [[ "$issue_body_lowercase" =~ "https://github.com/xenia-project/xenia/commit/.../" ]]; then
+            issue_invalidate "Version is invalid."
+          elif [[ ! "$issue_body_lowercase" =~ "https://github.com/xenia-project/xenia/commit/" ]]; then
+            issue_invalidate "Version is invalid or missing."
+          else
+            echo "Version isn't the default placeholder."
+          fi
+
+          # Check labels
+          if [[ "$issue_body_lowercase" =~ delisted ]]; then
+            echo "Game is delisted."
+            labels_to_add+="marketplace-delisted,"
+          fi
+          if [[ "$issue_body_lowercase" =~ unlisted ]]; then
+            echo "Game is unlisted."
+            labels_to_add+="marketplace-unlisted,"
+          fi
+          if [[ "$issue_body_lowercase" =~ unreleased ]]; then
+            echo "Game is unreleased."
+            labels_to_add+="marketplace-unreleased,"
+          fi
+          ## https://gist.github.com/douglascayers/9fbc6f2ad899f12030c31f428f912b5c
+          for page in 1 2; do # Max per page is 100
+            sourceLabelsJson64=$(curl -sS -H "Accept: application/vnd.github.symmetra-preview+json" -H "Authorization: Bearer $GITHUB_TOKEN" "https://api.github.com/repos/xenia-project/game-compatibility/labels?per_page=100&page=$page" | jq '[ .[] | { "name": .name } ]' | jq -r '.[] | @base64' )
+            for sourceLabelJson64 in $sourceLabelsJson64; do
+                sourceLabelJson=$(echo ${sourceLabelJson64} | base64 -d | jq -r '.name')
+                labels+=("$sourceLabelJson")
+            done
+          done
+          for label in "${labels[@]}"; do
+            if [[ "$issue_body_lowercase" =~ "$label" ]]; then
+              labels_to_add+="${label},"
+            fi
+          done # Remove trailing comma
+          labels_to_add="${labels_to_add/%,/}"
+          if [[ -z "$labels_to_add" ]]; then
+            issue_invalidate "Labels are invalid or missing."
+          elif [[ ! "$labels_to_add" =~ "state-" ]]; then
+            issue_invalidate "State label is invalid or missing."
+          else
+            echo "State label was provided."
+          fi
+          invalid_labels=("issue-duplicate" "issue-invalid" "issue-superseded" "state-crash-obsolete") # Body is lowercase so these should be too
+          if [[ "$labels_to_add" =~ ${invalid_labels[0]}|${invalid_labels[1]}|${invalid_labels[2]}|${invalid_labels[3]} ]]; then
+            issue_invalidate "Invalid labels provided; \`${invalid_labels[0]}\`, \`${invalid_labels[1]}\`, \`${invalid_labels[2]}\`, or \`${invalid_labels[3]}\`."
+          fi
+
+          if [[ -n "$issue_invalid" ]]; then
+            echo "Issue is invalid."
+            gh issue close $issue_number
+            close_body+=$'\n\n'"**Don't submit a new issue.** Just edit this one and if it's valid it will be manually reopened."
+            close_body+=$'\n\n'"If you want help with Xenia and/or your game go to our Discord server's #help channel: https://discord.gg/Q9mxZf9"
+            gh issue comment $issue_number -b "$close_body"
+            gh issue edit $issue_number --add-label "issue-invalid"
+          else
+            echo "Issue is valid."
+            gh issue edit $issue_number --add-label "$labels_to_add"
+          fi
