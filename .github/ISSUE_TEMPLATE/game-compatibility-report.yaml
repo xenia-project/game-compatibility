@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        **If you want help with Xenia go to our Discord server's #help channel: https://discord.gg/Q9mxZf9**
+        **If you want help with Xenia or your game go to our Discord server's #help channel: https://discord.gg/Q9mxZf9**
 
         Issues specific to Xenia itself belong here: https://github.com/xenia-project/xenia
 
@@ -37,9 +37,7 @@ body:
       description: |
         ie: https://marketplace.xbox.com/en-us/Product/Halo-3/66acd000-77fe-1000-9115-d8024d5307e6
         Can't find it? Try Google: `"game title" site:marketplace.xbox.com`
-        Delisted, unlisted, or unreleased can only be specified if they apply, and don't have a URL at all.
-    validations:
-      required: true
+        Leave blank if delisted, unlisted, or unreleased, and don't have a URL. The applicable label must be specified in the Labels section.
   - type: input
     id: commit
     attributes:
