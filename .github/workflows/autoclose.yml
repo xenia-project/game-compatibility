@@ -2,14 +2,20 @@ name: Autoclose
 on:
   issues:
     types: [opened, edited]
-  #  issue_comment: created # TODO: Check comments for labels(?)
-  #pull_request:   # Yes, someone actually did this;
-  #  types: opened # https://github.com/xenia-project/game-compatibility/pull/1501
+  issue_comment: 
+    types: created #, edited]
+  pull_request:    # Yes, someone actually did this;
+    types: opened  # https://github.com/xenia-project/game-compatibility/pull/1501
 jobs:
   autoclose:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2 # Needed by gh
+      # TODO: Use cache if issue/label count are the same
+      #- uses: actions/cache@v2
+      #  with:
+      #    path: cache
+      #    restore-keys: cache
       - name: Autoclose
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -19,68 +25,109 @@ jobs:
           issue_labels: ${{ join(github.event.issue.labels.*.name) }}
           issue_body: ${{ github.event.issue.body }}
           issue_state: ${{ github.event.issue.state }}
+          issue_comment_author: ${{ github.event.comment.user.login }}
+          issue_comment_body: ${{ github.event.comment.body }}
+          pull_request_number: ${{ github.event.pull_request.number }}
+          pull_request_author: ${{ github.event.pull_request.user.login }}
+          pull_request_title: ${{ github.event.pull_request.title }}
+          pull_request_body: ${{ github.event.pull_request.body }}
         run: |
           # TODO: Use cache to avoid API limits(?)
           # TODO: Check issues/log/screenshots(?)
-          function issue_body_trim() {
-            issue_body_trim=$(echo "$issue_body" | grep "### $1" -A 2 | tail +3)
-          }
 
-          function issue_invalidate() {
-            echo "$1"
-            issue_invalid_reasons+=$'\n'"  * $1"
-          }
-
-          # Check issue title
-          ## TODO: Fix this once and for all
-          if [[ "$issue_title" =~ ^([0-9A-F]{8} - .+)$ ]]; then
-            echo 'Title is valid.'
-            ## Check for duplicate(s)
-            repository_issues_json=$(gh api graphql --jq '.data.repository[]' --paginate -f query='
-              query($endCursor: String) {
-                repository(name: "game-compatibility", owner: "xenia-project") {
-                  issues(first:100, states:OPEN, after:$endCursor) {
-                    nodes {
-                      number
-                      title
-                    }
-                    pageInfo {
-                      hasNextPage
-                      endCursor
-                    }
-                  }
-                }
+          case "$GITHUB_EVENT_NAME" in
+            issues)
+              github_event_name_friendly='Issue'
+              function issue_body_trim() {
+                issue_body_trim=$(echo "$issue_body" | grep "### $1" -A 2 | tail +3)
               }
-            ')
-            readarray -t issue_numbers < <(jq -r '.nodes[].number' <<<"$repository_issues_json")
-            readarray -t issue_titles < <(jq -r '.nodes[].title' <<<"${repository_issues_json,,}")
-            issue_title_lowercase="${issue_title,,}"
-            ## Skip 1 to skip empty entry (TODO: Is this a hack?)
-            for (( i = 0; i <= $(( ${#issue_numbers[@]} - 1 )); i++ )); do
-              if [[ "$issue_title_lowercase" =~ ${issue_titles[$i]} ]]; then
-                issue_duplicates=$'\n'"    * #${issue_numbers[$i]}"
+              ;;
+            issue_comment)
+              issue_comment_author_whitelist=(benvanik BillieBlueberry CookiePLMonster DrChat emoose Etokapa gibbed Gliniak halotroop2288 illusion0001 Margen67 Nighterlev Prism019 randprint Razzile Triang3l ZolaKluke)
+              for whitelisted_author in "${issue_comment_author_whitelist[@]}"; do
+                if [ "$issue_comment_author" = "$whitelisted_author" ] && [ -z "$issue_comment_author_whitelisted" ]; then
+                  issue_comment_author_whitelisted='true'
+                  break
+                fi
+              done
+              if [ -n "$issue_comment_author_whitelisted" ]; then
+                github_event_name_friendly='Issue comment'
               fi
-            done
-            if [ -z "$issue_duplicates" ]; then
-              echo "Issue probably isn't a duplicate."
-            else
-              issue_invalidate "Issue is a duplicate of:$issue_duplicates"
+              ;;
+            pull_request)
+              github_event_name_friendly='PR'
+              ;;
+          esac
+
+          function compatibility_report_invalidate() {
+            echo "$1"
+            compatibility_report_invalid_reasons+=$'\n'"  * $1"
+          }
+          if [ "$GITHUB_EVENT_NAME" != 'issue_comment' ]; then
+            if [ "$GITHUB_EVENT_NAME" = 'pull_request' ]; then
+              issue_title="$pull_request_title"
             fi
-          else
-            issue_invalidate 'Title is invalid.'
+            # Check issue/pull request title
+            ## TODO: Fix validation of '######## -  '
+            if [[ "$issue_title" =~ ^([0-9A-F]{8} - .+)$ ]]; then
+              if [ "$GITHUB_EVENT_NAME" = 'issues' ]; then
+                echo 'Title is valid.'
+                ## Check for duplicate(s)
+                if [ '${{ github.event.action }}' = 'opened' ]; then
+                  repository_issues_json=$(gh api graphql --jq '.data.repository[]' --paginate -f query='
+                    query($endCursor: String) {
+                      repository(owner: "xenia-project", name: "game-compatibility") {
+                        issues(first:100, states:OPEN, after:$endCursor) {
+                          nodes {
+                            number
+                            title
+                          }
+                          pageInfo {
+                            hasNextPage
+                            endCursor
+                          }
+                        }
+                      }
+                    }
+                  ')
+                  readarray -t issue_numbers < <(jq -r '.nodes[].number' <<<"$repository_issues_json")
+                  readarray -t issue_titles < <(jq -r '.nodes[].title' <<<"${repository_issues_json,,}")
+                  issue_title_lowercase="${issue_title,,}"
+                  ## Skip 1 to skip empty entry (TODO: Is this a hack?)
+                  for (( i = 0; i <= $(( ${#issue_numbers[@]} - 1 )); i++ )); do
+                    if [[ "$issue_title_lowercase" =~ "${issue_titles[$i]}" ]] && [[ "$issue_number" != "${issue_numbers[$i]}" ]]; then
+                      issue_duplicates=$'\n'"    * #${issue_numbers[$i]}"
+                    fi
+                  done
+                fi
+                if [ -z "$issue_duplicates" ]; then
+                  echo "Issue probably isn't a duplicate."
+                else
+                  compatibility_report_invalidate "Issue is a duplicate of:$issue_duplicates"
+                fi
+              else
+                compatibility_report_invalidate "Compatibility reports can't be pull requests."
+              fi
+            elif [ "$GITHUB_EVENT_NAME" = 'issues' ]; then
+              compatibility_report_invalidate 'Title is invalid.'
+            elif [ "$GITHUB_EVENT_NAME" = 'pull_request' ]; then
+              echo 'Pull request is probably valid.'
+            fi
+            if [ "$GITHUB_EVENT_NAME" = 'issues' ]; then
+              # Check Xenia version
+              issue_body_trim 'Xenia version'
+              if [[ "$issue_body_trim" =~ https://github.com/xenia-project/xenia/commit/[0-9a-f]{5,40} ]]; then
+                echo 'Version is valid.'
+              else
+                compatibility_report_invalidate 'Version is invalid or missing.'
+              fi
+            fi
           fi
 
-          # Check version
-          issue_body_trim 'Xenia version'
-          if [[ "$issue_body_trim" =~ https://github.com/xenia-project/xenia/commit/[0-9a-f]{5,40} ]]; then
-            echo 'Version is valid.'
-          else
-            issue_invalidate 'Version is invalid or missing.'
-          fi
-
+          # Check Labels
           readarray -t repository_labels < <(gh api graphql --paginate --jq '.data.repository.labels.nodes[].name' -f query='
             query($endCursor: String) {
-              repository(name: "game-compatibility", owner: "xenia-project") {
+              repository(owner: "xenia-project", name: "game-compatibility") {
                 labels(first:100, after:$endCursor) {
                   nodes {
                     name
@@ -93,84 +140,137 @@ jobs:
               }
             }
           ')
-          issue_body_trim Labels
-          issue_labels_body=($(
-            echo "$issue_body_trim" |
-            awk '{
-              gsub(/ *( *,|\|| -* ?| ?-* |  *|--+|\++|\\+|\/|and|&|;|:) */," ");
-              gsub(/^\s+|\s+$|\s+(?=\s)/,"");
-            }1
-          ')
-          )
-          if (( "${#issue_labels_body[@]}" < 50 && "${#issue_labels_body[@]}" > 0 )); then
-            repository_labels_invalid=(issue-{invalid,duplicate,superseded,cluttered} state-crash-OBSOLETE)
-            for issue_label in "${issue_labels_body[@]}"; do
-              if [[ "${repository_labels[@]}" =~ "$issue_label" ]] && [[ ! "${repository_labels_invalid[@]}" =~ "$issue_label" ]]; then
-                echo "Valid label detected: $issue_label"
-                issue_labels_to_add+="${issue_label},"
+          repository_labels_invalid=(issue-{invalid,duplicate,superseded,cluttered} state-crash-OBSOLETE)
+          case "$GITHUB_EVENT_NAME" in
+            issues)
+              issue_body_trim Labels
+              issue_labels_body=($(
+                echo "$issue_body_trim" |
+                awk '{
+                  gsub(/ *( *,|\|| -* ?| ?-* |  *|--+|\++|\\+|\/|and|&|;|:) */," ");
+                  gsub(/^\s+|\s+$|\s+(?=\s)/,"");
+                }1
+              ')
+              )
+              if (( "${#issue_labels_body[@]}" > 0 && "${#issue_labels_body[@]}" < 50 )); then
+                for issue_label in "${issue_labels_body[@]}"; do
+                  if [[ "${repository_labels[@]}" =~ "$issue_label" ]] && [[ ! "${repository_labels_invalid[@]}" =~ "$issue_label" ]]; then
+                    echo "Valid label detected: $issue_label"
+                    labels_to_add+="${issue_label},"
+                  else
+                    echo "Invalid label detected: $issue_label"
+                    issue_labels_invalid_used+=$'\n'"    * $issue_label"
+                  fi
+                done
+                if [ -z "$issue_labels_invalid_used" ]; then
+                  echo 'No invalid labels were used.'
+                else
+                  compatibility_report_invalidate "Invalid label(s) provided;$issue_labels_invalid_used"
+                fi
+              else ## Abort if 0 or more than 50
+                echo 'Too many or not enough labels were detected. Skipping...'
+              fi
+              if [ -n "$labels_to_add" ]; then
+                ## Remove trailing comma
+                labels_to_add="${labels_to_add/%,/}"
+                repository_labels_marketplace=(delisted homebrew nodownload unlisted unreleased)
+                for repository_marketplace_label in "${repository_labels_marketplace[@]}"; do
+                  if [[ "$labels_to_add" =~ "marketplace-$repository_marketplace_label" ]]; then
+                    echo "Marketplace link is ${repository_marketplace_label}."
+                  fi
+                done
+                issue_labels_state_count=$(echo "$labels_to_add" | grep -o state- | wc -l)
+                if [ $issue_labels_state_count -eq 1 ] && [[ ! "$labels_to_add" =~ 'state-crash-OBSOLETE' ]]; then
+                  echo 'State label was provided.'
+                elif [ $issue_labels_state_count -gt 1 ]; then
+                  compatibility_report_invalidate 'Multiple state labels were provided.'
+                else
+                  compatibility_report_invalidate 'State label is invalid or missing.'
+                fi
               else
-                echo "Invalid label detected: $issue_label"
-                issue_labels_invalid_used+=$'\n'"    * $issue_label"
+                compatibility_report_invalidate 'Labels are invalid or missing.'
               fi
-            done
-            if [ -z "$issue_labels_invalid_used" ]; then
-              echo 'No invalid labels were used.'
-            else
-              issue_invalidate "Invalid label(s) provided;$issue_labels_invalid_used"
-            fi
-          else # Abort if 0 or more than 50
-            echo 'Too many or not enough labels were detected. Skipping...'
-          fi
-          if [ -n "$issue_labels_to_add" ]; then
-            ## Remove trailing comma
-            issue_labels_to_add="${issue_labels_to_add/%,/}"
-            repository_labels_marketplace=(delisted unlisted unreleased)
-            for repository_marketplace_label in "${repository_labels_marketplace[@]}"; do
-              if [[ "$issue_labels_to_add" =~ marketplace-$repository_marketplace_label ]]; then
-                echo "Marketplace link is ${repository_marketplace_label}."
+              issue_body_trim 'Xbox 360 Marketplace link'
+              if [[ "$labels_to_add" =~ 'marketplace' ]] || [[ "$issue_body_trim" =~ https://marketplace.xbox.com/.* ]]; then
+                echo 'Marketplace link and/or label(s) are present.'
+              else
+                compatibility_report_invalidate 'Marketplace link and/or label(s) are invalid or missing.'
               fi
-            done
-            issue_labels_state_count=$(echo "$issue_labels_to_add" | grep -o state- | wc -l)
-            if [ $issue_labels_state_count -eq 1 ] && [[ ! "$issue_labels_to_add" =~ state-crash-OBSOLETE ]]; then
-              echo 'State label was provided.'
-            elif [ $issue_labels_state_count -gt 1 ]; then
-              issue_invalidate 'Multiple state labels were provided.'
-            else
-              issue_invalidate 'State label is invalid or missing.'
-            fi
-          else
-            issue_invalidate 'Labels are invalid or missing.'
-          fi
-          issue_body_trim 'Xbox 360 Marketplace link'
-          if [[ "$issue_labels_to_add" =~ marketplace ]] || [[ "$issue_body_trim" =~ https://marketplace.xbox.com/.* ]]; then
-            echo 'Marketplace link and/or label(s) are present.'
-          else
-            issue_invalidate 'Marketplace link and/or label(s) are invalid or missing.'
-          fi
+              ;;
+            issue_comment)
+              if [ "$issue_comment_author_whitelisted" = 'true' ]; then
+                for repository_label in "${repository_labels[@]}"; do
+                  if [[ "$issue_comment_body" =~ "$repository_label" ]]; then
+                    if [[ ! "${repository_labels_invalid[@]}" =~ "$repository_label" ]]; then
+                      echo "Valid label detected: $repository_label"
+                      labels_to_add+="${repository_label},"
+                    else
+                      issue_labels_invalid_used+=$'\n'"    * $repository_label"
+                    fi
+                  fi
+                done
+                if [ -z "$issue_labels_invalid_used" ]; then
+                  echo 'No invalid labels were used.'
+                  if [ -n "$labels_to_add" ]; then
+                    ## Remove trailing comma
+                    labels_to_add="${labels_to_add/%,/}"
+                    issue_labels_state_count=$(echo "$labels_to_add" | grep -o state- | wc -l)
+                    if [ $issue_labels_state_count -eq 1 ] && [[ ! "$labels_to_add" =~ 'state-crash-OBSOLETE' ]]; then
+                      echo 'State label was provided.'
+                    elif [ $issue_labels_state_count -gt 1 ]; then
+                      unset labels_to_add ## TODO: Is there a better way of doing this?
+                      compatibility_report_invalidate 'Multiple state labels were provided.'
+                    fi
+                  fi
+                else
+                  unset labels_to_add ## TODO: Is there a better way of doing this?
+                  compatibility_report_invalidate "Invalid label(s) provided;$issue_labels_invalid_used"
+                fi
+              fi
+              ;;
+            pull_request)
+              for repository_label in "${repository_labels[@]}"; do
+                if [[ "$pull_request_body" =~ "$repository_label" ]] && [[ ! "$repository_label" =~ regression|trap ]]; then
+                  compatibility_report_invalidate "Compatibility reports can't be pull requests."
+                  break
+                fi
+              done
+              ;;
+          esac
 
-          if [ -z "$issue_invalid_reasons" ]; then
-            echo 'Issue is valid.'
-            if [ "$issue_state" = closed ] && [[ "$issue_labels" =~ ${repository_labels_invalid[0]}|${repository_labels_invalid[1]} ]]; then
+          if [ -z "$compatibility_report_invalid_reasons" ]; then
+            echo "$github_event_name_friendly is valid."
+            if [ "$issue_state" = 'closed' ] && [[ "$issue_labels" =~ ${repository_labels_invalid[0]}|${repository_labels_invalid[1]} ]]; then
+              ## TODO: Hide (or delete) the close comment if issue is reopened
               gh issue edit $issue_number --remove-label "${repository_labels_invalid[0]},${repository_labels_invalid[1]}"
               gh issue reopen $issue_number
             fi
           else
-            echo 'Issue is invalid.'
+            echo "$github_event_name_friendly is invalid."
             ## Closing "invalid" (i.e. potentially outdated) edited issues is too risky
-            if [ ${{ github.event.action }} = opened ]; then ## Only comment on 'opened' to prevent duplicate comments
-              gh issue close $issue_number
-              issue_close_body="@$issue_author your issue was automatically closed because it didn't follow the [issue/report guidelines](https://github.com/xenia-project/game-compatibility#reportissue-guidelines)."
-              issue_close_body+=$'\n'"Here is what's wrong with your issue:"
-              issue_close_body+="$issue_invalid_reasons"
-              issue_close_body+=$'\n\n'"**Don't submit a new issue.** Just edit this one and if it's valid it will be automatically reopened."
-              issue_close_body+=$'\n\n'"If you want help with Xenia and/or your game go to our Discord server's #help channel: https://discord.gg/Q9mxZf9"
-              gh issue comment $issue_number -b "$issue_close_body"
-              issue_labels_to_add="${repository_labels_invalid[0]}"
+            if [ '${{ github.event.action }}' = 'opened' ]; then ## Only comment on 'opened' to prevent duplicate comments
+              if [ "$GITHUB_EVENT_NAME" = 'pull_request' ]; then
+                issue_number="$pull_request_number"
+                issue_author="$pull_request_author"
+              fi
+              gh "${github_event_name_friendly,,}" close $issue_number
+              comment_close_body="@$issue_author your ${github_event_name_friendly,,} was automatically closed because it didn't follow the [issue/report guidelines](https://github.com/xenia-project/game-compatibility#reportissue-guidelines)."
+              comment_close_body+=$'\n'"Here is what's wrong with your compatibility report:"
+              comment_close_body+="$compatibility_report_invalid_reasons"
+              if [ "$GITHUB_EVENT_NAME" = 'issues' ]; then
+                comment_close_body+=$'\n\n'"**Don't submit a new ${github_event_name_friendly,,}.** Just edit this one and if it's valid it will be automatically reopened."
+              fi
+              comment_close_body+=$'\n\n'"If you want help with Xenia and/or your game go to our Discord server's #help channel: https://discord.gg/Q9mxZf9"
+              gh "${github_event_name_friendly,,}" comment $issue_number -b "$comment_close_body"
+              labels_to_add="${repository_labels_invalid[0]}"
               if [ -n "$issue_duplicates" ]; then
-                issue_labels_to_add+=",${repository_labels_invalid[1]}"
+                labels_to_add+=",${repository_labels_invalid[1]}"
               fi
             fi
           fi
-          if [ -n "$issue_labels_to_add" ]; then
-            gh issue edit $issue_number --add-label "$issue_labels_to_add"
+          if [ -n "$labels_to_add" ]; then
+            if [ -n "$issue_comment_author_whitelisted" ]; then
+              github_event_name_friendly='Issue'
+            fi
+            gh "${github_event_name_friendly,,}" edit $issue_number --add-label "$labels_to_add"
           fi
