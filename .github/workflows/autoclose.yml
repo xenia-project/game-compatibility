@@ -28,7 +28,7 @@ jobs:
           issue_comment_author: ${{ github.event.comment.user.login }}
           issue_comment_body: ${{ github.event.comment.body }}
           pull_request_number: ${{ github.event.pull_request.number }}
-          pull_request_author: ${{ github.event.pull_request.author }}
+          pull_request_author: ${{ github.event.pull_request.user.login }}
           pull_request_title: ${{ github.event.pull_request.title }}
           pull_request_body: ${{ github.event.pull_request.body }}
         run: |
