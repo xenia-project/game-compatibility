@@ -30,6 +30,7 @@ jobs:
           pull_request_title: ${{ github.event.pull_request.title }}
           pull_request_body: ${{ github.event.pull_request.body }}
         run: |
+          set -x #!!REMOVE THIS!!
           # TODO: Use cache to avoid API limits(?)
           # TODO: Check issues/log/screenshots(?)
 
