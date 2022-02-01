@@ -27,6 +27,8 @@ jobs:
           issue_state: ${{ github.event.issue.state }}
           issue_comment_author: ${{ github.event.comment.user.login }}
           issue_comment_body: ${{ github.event.comment.body }}
+          pull_request_number: ${{ github.event.pull_request.number }}
+          pull_request_author: ${{ github.event.pull_request.author }}
           pull_request_title: ${{ github.event.pull_request.title }}
           pull_request_body: ${{ github.event.pull_request.body }}
         run: |
@@ -230,6 +232,10 @@ jobs:
             echo "$github_event_name_friendly is invalid."
             ## Closing "invalid" (i.e. potentially outdated) edited issues is too risky
             if [ '${{ github.event.action }}' = 'opened' ]; then ## Only comment on 'opened' to prevent duplicate comments
+              if [ "$GITHUB_EVENT_NAME" = 'pull_request' ]; then
+                issue_number="$pull_request_number"
+                issue_author="$pull_request_author"
+              fi
               gh "${github_event_name_friendly,,}" close $issue_number
               comment_close_body="@$issue_author your ${github_event_name_friendly,,} was automatically closed because it didn't follow the [issue/report guidelines](https://github.com/xenia-project/game-compatibility#reportissue-guidelines)."
               comment_close_body+=$'\n'"Here is what's wrong with your issue:"
