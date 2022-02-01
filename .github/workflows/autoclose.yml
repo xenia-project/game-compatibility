@@ -64,6 +64,7 @@ jobs:
             }
             if [ "$GITHUB_EVEN_NAME" = 'pull_request' ]; then
               issue_title="$pull_request_title"
+              echo "issue_title = $issue_title"
             fi
             # Check issue/pull request title
             ## TODO: Fix validation of '######## -  '
