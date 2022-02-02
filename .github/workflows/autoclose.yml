@@ -173,7 +173,7 @@ jobs:
               if [ -n "$labels_to_add" ]; then
                 ## Remove trailing comma
                 labels_to_add="${labels_to_add/%,/}"
-                repository_labels_marketplace=(delisted homebrew nodownload unlisted unreleased)
+                repository_labels_marketplace=(delisted homebrew indie nodownload unlisted unreleased)
                 for repository_marketplace_label in "${repository_labels_marketplace[@]}"; do
                   if [[ "$labels_to_add" =~ "marketplace-$repository_marketplace_label" ]]; then
                     echo "Marketplace link is ${repository_marketplace_label}."
