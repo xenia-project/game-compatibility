@@ -10,7 +10,7 @@ jobs:
   autoclose:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2 # Needed by gh
+      - uses: actions/checkout@v3 # Needed by gh
       # TODO: Use cache if issue/label count are the same
       #- uses: actions/cache@v2
       #  with:
