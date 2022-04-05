@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3 # Needed by gh
       # TODO: Use cache if issue/label count are the same
-      #- uses: actions/cache@v2
+      #- uses: actions/cache@v3
       #  with:
       #    path: cache
       #    restore-keys: cache
@@ -35,9 +35,9 @@ jobs:
           # TODO: Use cache to avoid API limits(?)
           # TODO: Check issues/log/screenshots(?)
 
-          case "$GITHUB_EVENT_NAME" in
+          case $GITHUB_EVENT_NAME in
             issues)
-              github_event_name_friendly='Issue'
+              github_event_name_friendly=Issue
               function issue_body_trim() {
                 issue_body_trim=$(echo "$issue_body" | grep "### $1" -A 2 | tail +3)
               }
@@ -46,7 +46,7 @@ jobs:
               issue_comment_author_whitelist=(benvanik BillieBlueberry CookiePLMonster DrChat emoose Etokapa gibbed Gliniak halotroop2288 illusion0001 Margen67 Nighterlev Prism019 randprint Razzile Triang3l ZolaKluke)
               for whitelisted_author in "${issue_comment_author_whitelist[@]}"; do
                 if [ "$issue_comment_author" = "$whitelisted_author" ] && [ -z "$issue_comment_author_whitelisted" ]; then
-                  issue_comment_author_whitelisted='true'
+                  issue_comment_author_whitelisted=true
                   break
                 fi
               done
@@ -55,7 +55,7 @@ jobs:
               fi
               ;;
             pull_request)
-              github_event_name_friendly='PR'
+              github_event_name_friendly=PR
               ;;
           esac
 
@@ -63,17 +63,17 @@ jobs:
             echo "$1"
             compatibility_report_invalid_reasons+=$'\n'"  * $1"
           }
-          if [ "$GITHUB_EVENT_NAME" != 'issue_comment' ]; then
-            if [ "$GITHUB_EVENT_NAME" = 'pull_request' ]; then
+          if [ $GITHUB_EVENT_NAME != issue_comment ]; then
+            if [ $GITHUB_EVENT_NAME = pull_request ]; then
               issue_title="$pull_request_title"
             fi
             # Check issue/pull request title
             ## TODO: Fix validation of '######## -  '
             if [[ "$issue_title" =~ ^([0-9A-F]{8} - .+)$ ]]; then
-              if [ "$GITHUB_EVENT_NAME" = 'issues' ]; then
+              if [ $GITHUB_EVENT_NAME = issues ]; then
                 echo 'Title is valid.'
                 ## Check for duplicate(s)
-                if [ '${{ github.event.action }}' = 'opened' ]; then
+                if [ ${{ github.event.action }} = opened ]; then
                   repository_issues_json=$(gh api graphql --jq '.data.repository[]' --paginate -f query='
                     query($endCursor: String) {
                       repository(owner: "xenia-project", name: "game-compatibility") {
@@ -95,7 +95,7 @@ jobs:
                   issue_title_lowercase="${issue_title,,}"
                   ## Skip 1 to skip empty entry (TODO: Is this a hack?)
                   for (( i = 0; i <= $(( ${#issue_numbers[@]} - 1 )); i++ )); do
-                    if [[ "$issue_title_lowercase" =~ "${issue_titles[$i]}" ]] && [[ "$issue_number" != "${issue_numbers[$i]}" ]]; then
+                    if [[ "$issue_title_lowercase" =~ "${issue_titles[$i]}" && "$issue_number" != "${issue_numbers[$i]}" ]]; then
                       issue_duplicates=$'\n'"    * #${issue_numbers[$i]}"
                     fi
                   done
@@ -108,12 +108,12 @@ jobs:
               else
                 compatibility_report_invalidate "Compatibility reports can't be pull requests."
               fi
-            elif [ "$GITHUB_EVENT_NAME" = 'issues' ]; then
+            elif [ $GITHUB_EVENT_NAME = issues ]; then
               compatibility_report_invalidate 'Title is invalid.'
-            elif [ "$GITHUB_EVENT_NAME" = 'pull_request' ]; then
+            elif [ $GITHUB_EVENT_NAME = pull_request ]; then
               echo 'Pull request is probably valid.'
             fi
-            if [ "$GITHUB_EVENT_NAME" = 'issues' ]; then
+            if [ $GITHUB_EVENT_NAME = issues ]; then
               # Check Xenia version
               issue_body_trim 'Xenia version'
               if [[ "$issue_body_trim" =~ https://github.com/xenia-project/xenia/commit/[0-9a-f]{5,40} ]]; then
@@ -141,7 +141,7 @@ jobs:
             }
           ')
           repository_labels_invalid=(issue-{invalid,duplicate,superseded,cluttered} state-crash-OBSOLETE)
-          case "$GITHUB_EVENT_NAME" in
+          case $GITHUB_EVENT_NAME in
             issues)
               issue_body_trim Labels
               issue_labels_body=($(
@@ -154,7 +154,7 @@ jobs:
               )
               if (( "${#issue_labels_body[@]}" > 0 && "${#issue_labels_body[@]}" < 50 )); then
                 for issue_label in "${issue_labels_body[@]}"; do
-                  if [[ "${repository_labels[@]}" =~ "$issue_label" ]] && [[ ! "${repository_labels_invalid[@]}" =~ "$issue_label" ]]; then
+                  if [[ "${repository_labels[@]}" =~ "$issue_label" && ! "${repository_labels_invalid[@]}" =~ "$issue_label" ]]; then
                     echo "Valid label detected: $issue_label"
                     labels_to_add+="${issue_label},"
                   else
@@ -191,14 +191,14 @@ jobs:
                 compatibility_report_invalidate 'Labels are invalid or missing.'
               fi
               issue_body_trim 'Xbox 360 Marketplace link'
-              if [[ "$labels_to_add" =~ 'marketplace' ]] || [[ "$issue_body_trim" =~ https://marketplace.xbox.com/.* ]]; then
+              if [[ "$labels_to_add" =~ 'marketplace' || "$issue_body_trim" =~ https://marketplace.xbox.com/.* ]]; then
                 echo 'Marketplace link and/or label(s) are present.'
               else
                 compatibility_report_invalidate 'Marketplace link and/or label(s) are invalid or missing.'
               fi
               ;;
             issue_comment)
-              if [ "$issue_comment_author_whitelisted" = 'true' ]; then
+              if [ "$issue_comment_author_whitelisted" = true ]; then
                 for repository_label in "${repository_labels[@]}"; do
                   if [[ "$issue_comment_body" =~ "$repository_label" ]]; then
                     if [[ ! "${repository_labels_invalid[@]}" =~ "$repository_label" ]]; then
@@ -230,7 +230,7 @@ jobs:
               ;;
             pull_request)
               for repository_label in "${repository_labels[@]}"; do
-                if [[ "$pull_request_body" =~ "$repository_label" ]] && [[ ! "$repository_label" =~ regression|trap ]]; then
+                if [[ "$pull_request_body" =~ "$repository_label" && ! "$repository_label" =~ regression|trap ]]; then
                   compatibility_report_invalidate "Compatibility reports can't be pull requests."
                   break
                 fi
@@ -240,7 +240,7 @@ jobs:
 
           if [ -z "$compatibility_report_invalid_reasons" ]; then
             echo "$github_event_name_friendly is valid."
-            if [ "$issue_state" = 'closed' ] && [[ "$issue_labels" =~ ${repository_labels_invalid[0]}|${repository_labels_invalid[1]} ]]; then
+            if [ $issue_state = closed ] && [[ "$issue_labels" =~ ${repository_labels_invalid[0]}|${repository_labels_invalid[1]} ]]; then
               ## TODO: Hide (or delete) the close comment if issue is reopened
               gh issue edit $issue_number --remove-label "${repository_labels_invalid[0]},${repository_labels_invalid[1]}"
               gh issue reopen $issue_number
@@ -248,8 +248,8 @@ jobs:
           else
             echo "$github_event_name_friendly is invalid."
             ## Closing "invalid" (i.e. potentially outdated) edited issues is too risky
-            if [ '${{ github.event.action }}' = 'opened' ]; then ## Only comment on 'opened' to prevent duplicate comments
-              if [ "$GITHUB_EVENT_NAME" = 'pull_request' ]; then
+            if [ ${{ github.event.action }} = opened ]; then ## Only comment on 'opened' to prevent duplicate comments
+              if [ $GITHUB_EVENT_NAME = pull_request ]; then
                 issue_number="$pull_request_number"
                 issue_author="$pull_request_author"
               fi
@@ -257,7 +257,7 @@ jobs:
               comment_close_body="@$issue_author your ${github_event_name_friendly,,} was automatically closed because it didn't follow the [issue/report guidelines](https://github.com/xenia-project/game-compatibility#reportissue-guidelines)."
               comment_close_body+=$'\n'"Here is what's wrong with your compatibility report:"
               comment_close_body+="$compatibility_report_invalid_reasons"
-              if [ "$GITHUB_EVENT_NAME" = 'issues' ]; then
+              if [ $GITHUB_EVENT_NAME = issues ]; then
                 comment_close_body+=$'\n\n'"**Don't submit a new ${github_event_name_friendly,,}.** Just edit this one and if it's valid it will be automatically reopened."
               fi
               comment_close_body+=$'\n\n'"If you want help with Xenia and/or your game go to our Discord server's #help channel: https://discord.gg/Q9mxZf9"
@@ -270,7 +270,7 @@ jobs:
           fi
           if [ -n "$labels_to_add" ]; then
             if [ -n "$issue_comment_author_whitelisted" ]; then
-              github_event_name_friendly='Issue'
+              github_event_name_friendly=Issue
             fi
             gh "${github_event_name_friendly,,}" edit $issue_number --add-label "$labels_to_add"
           fi
