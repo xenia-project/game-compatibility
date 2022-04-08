@@ -38,10 +38,9 @@ jobs:
           case "$GITHUB_EVENT_NAME" in
             issues)
               github_event_name_friendly=Issue
-              function issue_body_trim() {
+              issue_body_trim() {
                 issue_body_trim=$(echo "$issue_body" | grep "### $1" -A 2 | tail +3)
-              }
-              ;;
+              };;
             issue_comment)
               issue_comment_author_whitelist=(benvanik BillieBlueberry CookiePLMonster DrChat emoose Etokapa gibbed Gliniak halotroop2288 illusion0001 Margen67 Nighterlev Prism019 randprint Razzile Triang3l ZolaKluke)
               for whitelisted_author in "${issue_comment_author_whitelist[@]}"; do
@@ -50,16 +49,12 @@ jobs:
                   break
                 fi
               done
-              if [ -n "$issue_comment_author_whitelisted" ]; then
-                github_event_name_friendly='Issue comment'
-              fi
-              ;;
+              github_event_name_friendly='Issue comment';;
             pull_request)
-              github_event_name_friendly=PR
-              ;;
+              github_event_name_friendly=PR;;
           esac
 
-          function compatibility_report_invalidate() {
+          compatibility_report_invalidate() {
             echo "$1"
             compatibility_report_invalid_reasons+=$'\n'"  * $1"
           }
@@ -152,7 +147,7 @@ jobs:
                 }1
               ')
               )
-              if (( "${#issue_labels_body[@]}" > 0 && "${#issue_labels_body[@]}" < 50 )); then
+              if (( ${#issue_labels_body[@]} > 0 && ${#issue_labels_body[@]} < 50 )); then
                 for issue_label in "${issue_labels_body[@]}"; do
                   if [[ "${repository_labels[@]}" =~ "$issue_label" && ! "${repository_labels_invalid[@]}" =~ "$issue_label" ]]; then
                     echo "Valid label detected: $issue_label"
@@ -195,8 +190,7 @@ jobs:
                 echo 'Marketplace link and/or label(s) are present.'
               else
                 compatibility_report_invalidate 'Marketplace link and/or label(s) are invalid or missing.'
-              fi
-              ;;
+              fi;;
             issue_comment)
               if [ "$issue_comment_author_whitelisted" = true ]; then
                 for repository_label in "${repository_labels[@]}"; do
@@ -226,16 +220,14 @@ jobs:
                   unset labels_to_add ## TODO: Is there a better way of doing this?
                   compatibility_report_invalidate "Invalid label(s) provided;$issue_labels_invalid_used"
                 fi
-              fi
-              ;;
+              fi;;
             pull_request)
               for repository_label in "${repository_labels[@]}"; do
                 if [[ "$pull_request_body" =~ "$repository_label" && ! "$repository_label" =~ regression|trap ]]; then
                   compatibility_report_invalidate "Compatibility reports can't be pull requests."
                   break
                 fi
-              done
-              ;;
+              done;;
           esac
 
           if [ -z "$compatibility_report_invalid_reasons" ]; then
@@ -269,8 +261,5 @@ jobs:
             fi
           fi
           if [ -n "$labels_to_add" ]; then
-            if [ -n "$issue_comment_author_whitelisted" ]; then
-              github_event_name_friendly=Issue
-            fi
             gh "${github_event_name_friendly,,}" edit $issue_number --add-label "$labels_to_add"
           fi
