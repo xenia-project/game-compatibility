@@ -23,14 +23,14 @@ body:
     attributes:
       label: Validation
       options:
-      - label: I've read the [FAQ](https://github.com/xenia-project/xenia/wiki/FAQ).
-        required: true
-      - label: The Xenia build used is from the master branch. (not MLBS/AlexVS/Canary/pull requests, etc)
-        required: true
-      - label: This issue isn't for help (tech support) with Xenia, or a game.
-        required: true
-      - label: I've checked if this game doesn't already have a compatibility report.
-        required: true
+        - label: I've read the [FAQ](https://github.com/xenia-project/xenia/wiki/FAQ).
+          required: true
+        - label: The Xenia build used is from the master branch. (not MLBS/AlexVS/Canary/pull requests, etc)
+          required: true
+        - label: This issue isn't for help (tech support) with Xenia, or a game.
+          required: true
+        - label: I've checked if this game doesn't already have a compatibility report.
+          required: true
   - id: marketplace-link
     type: input
     attributes:
