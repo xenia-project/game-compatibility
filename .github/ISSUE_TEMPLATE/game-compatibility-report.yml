@@ -9,8 +9,6 @@ body:
         **If you want help with Xenia or your game go to our Discord server's #help channel: https://discord.gg/Q9mxZf9**
 
         Issues specific to Xenia itself belong here: https://github.com/xenia-project/xenia
-
-        Compatibility reports for Xenia Canary belong here: https://github.com/xenia-canary/game-compatibility
         #
         The Title ID of a game can be found in xenia.log after running the game;
         Search (<kbd>Ctrl+F</kbd> in most text editors) for `XEX_HEADER_EXECUTION_INFO`.
@@ -25,7 +23,7 @@ body:
       options:
         - label: I've read the [FAQ](https://github.com/xenia-project/xenia/wiki/FAQ).
           required: true
-        - label: The Xenia build used is from the master branch. (not MLBS/AlexVS/Canary/pull requests, etc)
+        - label: The Xenia build used is from the master or [Canary](https://github.com/xenia-canary/xenia-canary/releases/tag/experimental) branch. (not MLBS/AlexVS/pull requests, etc)
           required: true
         - label: This issue isn't for help (tech support) with Xenia, or a game.
           required: true

@@ -10,13 +10,14 @@ If you would like to submit a game-compatibility issue, please fill in the Game
 Compatibility Report template, or else your issue will be closed.
 
 ### What NOT to post:
+  * Piracy.
+    * This should be common sense.
   * Issues that are empty, or don't edit/use the template whatsoever.
   * Non-English comments *except for posting untranslated comment alongside translated comment*.
   * Comments with bad spelling/grammar:
     * [Vulkan is a graphics API](https://www.khronos.org/vulkan/). *Vulcan* is a species from Star Trek. *Vulcun* is related to eSports. *Vulkin* is an Undertale character. **Learn the difference.**
   * Non-game-specific Xenia issue(s).
-  * Results not from [master](https://github.com/xenia-project/release-builds-windows/releases/latest).
-    * Results from Xenia Canary belong in its own [compatibility tracker](https://github.com/xenia-canary/game-compatibility/issues).
+  * Results not from [Xenia master](https://github.com/xenia-project/release-builds-windows/releases/latest) or [Xenia Canary](https://github.com/xenia-canary/xenia-canary/releases/tag/experimental).
   * Tech Support:
     * `How do I do/fix X?`
     * `How do I get games?`
